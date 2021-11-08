@@ -28,7 +28,7 @@ const objErr = {
 
 TypeCheck(typeObj, obj) // No error
 
-TypeCheck(typeObj, obj) // Error
+TypeCheck(typeObj, objErr) // Error
 ```
 
 ### CommonJS
@@ -53,6 +53,6 @@ TypeCheck(typeObj, obj) // Error
 
   typing.default(typeObj, obj) // No error
 
-  typing.default(typeObj, obj) // Error
+  typing.default(typeObj, objErr) // Error
 }).call(this)
 ```
