@@ -1,0 +1,12 @@
+{
+  "name": "typing",
+  "type": "module",
+  "version": "0.0.6
+  "description": "Check Object Types"
+  "main": "index.js",
+  "author": "snowie",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^16.11.6"
+  }
+}
