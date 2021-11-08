@@ -8,7 +8,6 @@ const arrayTypes = [
     "BigIntArray",
     "BooleanArray",
 ];
-
 export const fnIsObjectArray = (t) => {
     return t.name === "ObjectArray";
 };
@@ -33,7 +32,6 @@ export const fnIsBooleanArray = (t) => {
 export const fnIsAnyArray = (t) => {
     return t.name === "Array";
 };
-
 const isArrayCustom = (type, arg) => {
     if (!Array.isArray(arg)) {
         return {
@@ -67,61 +65,51 @@ const isArrayCustom = (type, arg) => {
         type: "array",
     };
 };
-
 export class ObjectArray extends Array {
     static isObjectArray(arg) {
         return isArrayCustom("object", arg).valid;
     }
 }
-
 export class FunctionArray extends Array {
     static isFunctionArray(arg) {
         return isArrayCustom("function", arg).valid;
     }
 }
-
 export class StringArray extends Array {
     static isStringArray(arg) {
         return isArrayCustom("string", arg).valid;
     }
 }
-
 export class SymbolArray extends Array {
     static isSymbolArray(arg) {
         return isArrayCustom("symbol", arg).valid;
     }
 }
-
 export class NumberArray extends Array {
     static isNumberArray(arg) {
         return isArrayCustom("number", arg).valid;
     }
 }
-
 export class BigIntArray extends Array {
     static isBigIntArray(arg) {
         return isArrayCustom("bigint", arg).valid;
     }
 }
-
 export class BooleanArray extends Array {
     static isBooleanArray(arg) {
         return isArrayCustom("boolean", arg).valid;
     }
 }
-
 export class Null extends null {
     static isNull(arg) {
         return arg === null;
     }
 }
-
 export class Undefined {
     static isUndefined(arg) {
         return typeof arg === "undefined";
     }
 }
-
 export class Enum extends Object {
     static isEnum(t) {
         if (typeof t !== "object") {
@@ -150,7 +138,7 @@ export class Enum extends Object {
         return enumObj;
     }
 }
-export function TypeCheck(objWithTypes, obj) {
+export function TypeCheck(objWithTypes, obj, throwIfPropertyIsMissing = false) {
     const typeEntries = Object.entries(objWithTypes).filter(([key]) => !key.startsWith("_"));
     const throwErr = (message) => {
         throw new TypeError(message);
@@ -197,39 +185,40 @@ export function TypeCheck(objWithTypes, obj) {
         }
     };
     for (const [key, value] of typeEntries) {
+        // Verifies that the value of the type is a array, if it is start the type check
+        if (Array.isArray(value)) {
+            const types = value.map((type) => type.name.toLowerCase()); // Passing the type names to Lower Case
+            const filtered = types.filter((type) => {
+                if (arrayTypes.map((type) => type.toLowerCase()).includes(type)) {
+                    checkArrayType(key, type);
+                }
+                else if ((type === "null" || type === "undefined") && !obj[key]) {
+                    return true;
+                }
+                else if (type === Enum.name.toLowerCase()) {
+                    return Enum.isEnum(obj[key]);
+                }
+                return typeof obj[key] === type;
+            });
+            if (filtered.length === 0) {
+                const last = types.pop();
+                let text;
+                if (types.length < 1) {
+                    text = last;
+                }
+                else {
+                    text = `${types.join(", ")} or ${last}`;
+                }
+                throwErr(makeErrorMessage(key, text, Enum.isEnum(obj[key])
+                    ? "enum"
+                    : obj[key] === null
+                        ? "null"
+                        : undefined));
+            }
+        }
         // Verifies that the value of the type is a function, if it is start the type check
         if (typeof value === "function") {
-            if (Array.isArray(value)) {
-                const types = value.map((type) => type.name.toLowerCase()); // Passing the type names to Lower Case
-                const filtered = types.filter((type) => {
-                    if (arrayTypes.map((type) => type.toLowerCase()).includes(type)) {
-                        checkArrayType(key, type);
-                    }
-                    else if ((type === "null" || type === "undefined") && !obj[key]) {
-                        return true;
-                    }
-                    else if (type === Enum.name.toLowerCase()) {
-                        return Enum.isEnum(obj[key]);
-                    }
-                    return typeof obj[key] === type;
-                });
-                if (filtered.length === 0) {
-                    const last = types.pop();
-                    let text;
-                    if (types.length < 1) {
-                        text = last;
-                    }
-                    else {
-                        text = `${types.join(", ")} or ${last}`;
-                    }
-                    throwErr(makeErrorMessage(key, text, Enum.isEnum(obj[key])
-                        ? "enum"
-                        : obj[key] === null
-                            ? "null"
-                            : undefined));
-                }
-            }
-            else if (value.name && value.name.includes("Array")) {
+            if (value.name.includes("Array")) {
                 const [name] = value.name.split("Array");
                 if (!Array.isArray(obj[key])) {
                     throwErr(makeErrorMessage(key, name !== "" ? `${name} array` : "array"));
@@ -241,12 +230,11 @@ export function TypeCheck(objWithTypes, obj) {
                     throwErr(makeErrorMessage(key, "enum"));
                 }
             }
-            else if (value.name && typeof obj[key] !== value.name?.toLowerCase()) {
+            else if (typeof obj[key] !== value.name?.toLowerCase()) {
                 throwErr(makeErrorMessage(key, value.name, Enum.isEnum(obj[key]) ? "enum" : undefined));
             }
         }
     }
     return obj;
 }
-
 export default TypeCheck;
