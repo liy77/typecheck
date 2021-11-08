@@ -138,7 +138,7 @@ export class Enum extends Object {
         return enumObj;
     }
 }
-export function TypeCheck(objWithTypes, obj, throwIfPropertyIsMissing = false) {
+export function TypeCheck(objWithTypes, obj) {
     const typeEntries = Object.entries(objWithTypes).filter(([key]) => !key.startsWith("_"));
     const throwErr = (message) => {
         throw new TypeError(message);
