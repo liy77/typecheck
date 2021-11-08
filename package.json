@@ -2,7 +2,7 @@
   "name": "typing",
   "type": "module",
   "version": "0.0.6",
-  "description": "Check Object Types"
+  "description": "Check Object Types",
   "main": "index.js",
   "author": "snowie",
   "license": "MIT",
